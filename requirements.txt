@@ -7,4 +7,5 @@ vcsi
 playwright
 myjdapi
 swibots
+qbittorrent-api
 yt-dlp
