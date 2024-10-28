@@ -158,6 +158,9 @@ async def fetch_draft_links():
 
 
 def fetch_draft_links():
+    """Fetch links from DraftSex."""
+    logging.info("Starting to fetch DraftSex links")
+    
     # Initialize a session to reuse across requests
     session = requests.Session()
 
@@ -165,15 +168,13 @@ def fetch_draft_links():
         """Extract links from a given page based on the filter function."""
         try:
             response = session.get(url)
-            if response.status_code == 200:
-                soup = BeautifulSoup(response.content, 'html.parser')
-                # Extract relevant links based on the provided filter function
-                links = [a.get('href') for a in soup.find_all('a', href=True) if link_filter(a.get('href'))]
-                return links
-            else:
-                return []
+            response.raise_for_status()
+            soup = BeautifulSoup(response.content, 'html.parser')
+            links = [a.get('href') for a in soup.find_all('a', href=True) if link_filter(a.get('href'))]
+            logging.info(f"Extracted {len(links)} links from {url}")
+            return links
         except requests.RequestException as e:
-            print(f"Error retrieving {url}: {e}")
+            logging.error(f"Error retrieving {url}: {e}")
             return []
 
     def filter_video_links(href):
@@ -188,39 +189,46 @@ def fetch_draft_links():
         """Process multiple pages in parallel and extract links."""
         all_links = []
         with ThreadPoolExecutor(max_workers=10) as executor:
-            # Submit page fetching tasks in parallel
             future_to_url = {executor.submit(extract_links_from_page, f"{base_url}/page{page}.html", link_filter): page for page in page_range}
             
             for future in future_to_url:
-                links = future.result()
-                all_links.extend(links)
+                try:
+                    links = future.result()
+                    all_links.extend(links)
+                except Exception as e:
+                    logging.error(f"Error fetching links from page {future_to_url[future]}: {e}")
+        logging.info(f"Total links fetched from {base_url}: {len(all_links)}")
         return all_links
 
-    
-
-    # Step 21: Collect all video links from categories
+    # Step 1: Collect video links from categories
     cats = ["top-rated", "most-viewed", "most-recent"]
     video_links = []
     for cat in cats:
-        cat_links = process_pages(f'https://draftsex.porn/{cat}', range(10), filter_video_links)
+        logging.info(f"Fetching video links from category: {cat}")
+        cat_links = process_pages(f'https://draftsex.porn/{cat}', range(1, 11), filter_video_links)
         video_links.extend(cat_links)
-    
 
-    # Step 2: Collect all model links
-    model_links = process_pages('https://draftsex.porn/models', range(100), filter_model_links)
+    # Step 2: Collect model links
+    logging.info("Fetching model links")
+    model_links = process_pages('https://draftsex.porn/models', range(1, 101), filter_model_links)
     
-    
-    # Step 3: Process all collected links to extract further video links
+    # Step 3: Extract additional video links from each model link
     vids = []
+    logging.info("Extracting additional video links from model pages")
     with ThreadPoolExecutor(max_workers=10) as executor:
         future_to_url = {executor.submit(extract_links_from_page, url, filter_video_links): url for url in model_links}
         
         for future in future_to_url:
-            extracted_vids = future.result()
-            vids.extend(extracted_vids)
+            try:
+                extracted_vids = future.result()
+                vids.extend(extracted_vids)
+            except Exception as e:
+                logging.error(f"Error extracting video links from model page {future_to_url[future]}: {e}")
 
-    # Return or print the total links collected
-    return vids
+    total_links = video_links + vids
+    logging.info(f"Total links fetched from DraftSex: {len(total_links)}")
+    return total_links
+
 
 
 # Main Execution
