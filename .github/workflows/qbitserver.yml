@@ -15,14 +15,22 @@ jobs:
           ls
       - name: Run Docker Container
         run: |
-            docker run -t --name qbittorrent-nox --rm \
-            --read-only --stop-timeout 1800 --tmpfs /tmp \
-            -e QBT_LEGAL_NOTICE=put_confirm_here \
-            -e QBT_WEBUI_PORT=8080 \
-            -p 8080:8080 -p 6881:6881/tcp -p 6881:6881/udp \
-            -v "$(pwd)/qbit/config:/config" \
-            -v "$(pwd)/downloads:/downloads" \
-            qbittorrentofficial/qbittorrent-nox:latest
+            export QBT_LEGAL_NOTICE=confirm QBT_VERSION=latest QBT_WEBUI_PORT=8080 QBT_CONFIG_PATH="$pwd/qbit/config" QBT_DOWNLOADS_PATH="$pwd/downloads"
+            docker run \
+             -t \
+             --name qbittorrent-nox \
+             --read-only \
+             --rm \
+             --stop-timeout 1800 \
+             --tmpfs /tmp \
+             -e QBT_LEGAL_NOTICE \
+             -e QBT_WEBUI_PORT \
+             -p "$QBT_WEBUI_PORT":"$QBT_WEBUI_PORT"/tcp \
+             -p 6881:6881/tcp \
+             -p 6881:6881/udp \
+             -v "$QBT_CONFIG_PATH":/config \
+             -v "$QBT_DOWNLOADS_PATH":/downloads \
+             qbittorrentofficial/qbittorrent-nox:${QBT_VERSION}
       - name: Building Image
         run:  pip install -r requirements.txt
       - name: Building Image
