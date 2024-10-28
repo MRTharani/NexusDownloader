@@ -25,7 +25,7 @@ async def jav_fetch_links(url):
             await page.close()
 
             soup = BeautifulSoup(content, 'html.parser')
-            links = [link['href'] for link in soup.find_all('a', href=True)]
+            links = [link['href'] for link in soup.find_all('a', href=True) if link['href'] !=url]
             logging.info(f"Fetched {len(links)} links from {url}")
             return links
         except Exception as e:
