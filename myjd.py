@@ -113,6 +113,8 @@ def move_links(device, filter_condition):
     if link_ids:
         try:
             linkgrabber.move_to_downloadlist(link_ids, package_ids)
+            time.sleep(5)
+            linkgrabber.clear_list()
             logging.info("Moved new links to download list.")
         except myjdapi.exception.MYJDConnectionException as e:
             logging.error(f"Failed to move links to download list: {e}")
