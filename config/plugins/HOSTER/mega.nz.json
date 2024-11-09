@@ -1,0 +1,1 @@
+{"5gbfreelimitenabled":true,"allowmultihostusage":true,"allowconcurrentdecryption":false,"useglobalcdn":true,"allowstartfromzeroifdownloadwasstartedviamultihosterbefore":false,"invalidormissingdecryptionkeyaction":"DEFAULT","checkreservertraffic":false,"maxwaittimeonlimitreachedminutes":10,"limitmode":"PER_FILE","hideapplication":true,"usessl":true,"usetmpdecryptingfile":false}
